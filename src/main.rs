@@ -75,6 +75,21 @@ impl Display {
     }
 }
 
+struct Keypad {
+
+}
+
+impl Keypad {
+    fn new() -> Keypad {
+        Keypad {}
+    }
+
+    fn pressed() -> Option<u8> {
+        None
+    }
+
+}
+
 struct Emulator {
     V: [u8; 16],
     memory: Vec<u8>,
@@ -86,7 +101,8 @@ struct Emulator {
     display: Display,
     sound_timer: u8,
     delay_timer: u8,
-    draw_flag: bool
+    draw_flag: bool,
+    keypad: Keypad
 }
 
 impl Emulator {
@@ -103,7 +119,8 @@ impl Emulator {
             display: Display::new(),
             sound_timer: 0,
             delay_timer: 0,
-            draw_flag: false
+            draw_flag: false,
+            keypad: Keypad::new()
         };
 
         let fontset = Emulator::get_fontset();
@@ -364,8 +381,25 @@ impl Emulator {
 
                 self.draw_flag = true;
             },
-            Opcode::SkipKeyPressed(reg1) => (),
-            Opcode::SkipKeyNotPressed(reg1) => (),
+            Opcode::SkipKeyPressed(reg1) => {
+                let val = self.V[reg1 as usize];
+                if let Some(key) = Keypad::pressed() {
+                    if key == val {
+                        self.pc += 2;
+                    }
+                }             
+            },
+            Opcode::SkipKeyNotPressed(reg1) => {
+                let val = self.V[reg1 as usize];
+                if let Some(key) = Keypad::pressed() {
+                    if key != val {
+                        self.pc += 2;
+                    }
+                }
+                else {
+                    self.pc += 2;
+                }                   
+            },
             Opcode::CopyDelayToReg(reg1) => self.V[reg1 as usize] = self.delay_timer,
             Opcode::WaitForKeyPress(reg1) => (),
             Opcode::SetDelayFromReg(reg1) => self.delay_timer = self.V[reg1 as usize],
