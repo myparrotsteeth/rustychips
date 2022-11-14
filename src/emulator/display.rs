@@ -25,11 +25,11 @@ pub mod display {
         pub fn write_row_buffer(&mut self, x:usize,y:usize, row_as_byte: u8) -> bool {
             let mut collision = false;
             for i in 0..8 {
-                let bit_value = ( row_as_byte >> (7-i) ) & 1;
+                let bit_value = (( row_as_byte >> (7-i) ) & 1) > 0;
                 //println!("i = {}, j = {}, x = {}, y = {}, row_byte = {}, bit = {}", 
                 //    i, j, x_coord, y_coord, row_byte, bit_value);
-                let screen_pixel = &mut (self.pixels[y][x+i]);
-                if bit_value == 1  {
+                let screen_pixel = &mut (self.pixels[y][(x+i)%64]);
+                if bit_value {
                     if *screen_pixel == true {
                         *screen_pixel = false;
                         collision = true;

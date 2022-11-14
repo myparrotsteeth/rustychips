@@ -107,6 +107,7 @@ pub mod emulator {
         fn decode(instruction: u16) -> Opcode {
             match instruction {
                 0x00e0 => Opcode::ClearScreen,
+                0x00ee => Opcode::Return,
                 0x1000..=0x1fff => Opcode::Jump(instruction& 0x0fff),
                 0x2000..=0x2fff => Opcode::Call(instruction& 0x0fff),
                 0x3000..=0x3fff => {
@@ -218,6 +219,9 @@ pub mod emulator {
                     self.display.clear();
                     self.draw_flag = true;
                 },
+                Opcode::Return => {
+                    self.pc = self.pop_stack();
+                },
                 Opcode::Jump(addr) => {
                     self.pc = addr;
                 },
@@ -241,7 +245,7 @@ pub mod emulator {
                     }
                 },                     
                 Opcode::Set(v, n) => self.V[v as usize] = n,
-                Opcode::IncrementReg(v, n) => self.V[v as usize] += n,
+                Opcode::IncrementReg(v, n) => self.V[v as usize] = self.V[v as usize].wrapping_add(n),
                 Opcode::CopyReg(reg1, reg2) => self.V[reg1 as usize] = self.V[reg2 as usize],
                 Opcode::BitwiseOr(reg1, reg2) => self.V[reg1 as usize] |= self.V[reg2 as usize],
                 Opcode::BitwiseAnd(reg1, reg2) => self.V[reg1 as usize] &= self.V[reg2 as usize],
@@ -339,7 +343,14 @@ pub mod emulator {
                     }                   
                 },
                 Opcode::CopyDelayToReg(reg1) => self.V[reg1 as usize] = self.delay_timer,
-                Opcode::WaitForKeyPress(reg1) => (),
+                Opcode::WaitForKeyPress(reg1) => {
+                    while(true) {
+                        if let Some(key) = Keypad::pressed() {
+                            self.V[reg1 as usize] = key as u8;
+                            break;
+                        }                         
+                    }
+                },
                 Opcode::SetDelayFromReg(reg1) => self.delay_timer = self.V[reg1 as usize],
                 Opcode::SetSoundFromReg(reg1) => self.sound_timer = self.V[reg1 as usize],
                 Opcode::AddI(val) => self.I += val,
