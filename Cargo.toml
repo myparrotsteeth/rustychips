@@ -1,5 +1,5 @@
 [package]
-name = "chip8rust"
+name = "rustychips"
 version = "0.1.0"
 edition = "2021"
 
