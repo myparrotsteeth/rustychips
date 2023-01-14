@@ -1,12 +1,14 @@
+use std::time::Duration;
+use crossterm::event::{read, Event, KeyCode, KeyEvent, KeyModifiers, poll};
+use crossterm::terminal;
 
-pub mod keypad {
-    use crossterm::event::{read, Event, KeyCode, KeyEvent, KeyModifiers};
-    pub struct Keypad{}
+pub struct Keypad{}
 
-    impl Keypad {
+impl Keypad {
 
-        pub fn pressed() -> Option<u32> {
-
+    pub fn pressed() -> Option<u32> {
+        terminal::enable_raw_mode().expect("Could not turn on Raw mode");
+        if let Ok(true) = poll(Duration::from_millis(100)) {
             let char = match read().unwrap() {
                 Event::Key(KeyEvent {
                     code: KeyCode::Char(c),
@@ -14,7 +16,7 @@ pub mod keypad {
                 ..}) => Some(c),
                 _ => None
             };
-
+    
             match char {
                 Some('1') => Some(0x1),
                 Some('2') => Some(0x2),
@@ -35,13 +37,17 @@ pub mod keypad {
                 _ => None
             }
         }
-
-        fn map_key(c: char) -> Option<u32> {
-            match c {
-                '1'..='f' => c.to_digit(10),
-                _ => None
-            }
+        else {
+            None
         }
 
     }
+
+    fn map_key(c: char) -> Option<u32> {
+        match c {
+            '1'..='f' => c.to_digit(10),
+            _ => None
+        }
+    }
+
 }
